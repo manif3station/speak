@@ -6,7 +6,7 @@ This is a small macOS Perl utility with two commands that pass messages through 
 
 - `cli/__init__.pl` is the sender. It joins the command-line arguments into a message, stages a `.msg` file in the data directory, and renames it into the `new` queue.
 - `cli/read.pl` is the reader. It moves files from `new` to `speaking`, speaks them in filename order, then removes successful messages.
-- `lib/Speaker.swift` uses AVFoundation and selects the highest-quality installed English voice, preferring US English when quality is equal.
+- `lib/Speaker.swift` uses AVFoundation and selects the highest-quality command-line-accessible English voice, preferring Samantha when quality is equal; Siri natural voices are excluded because some installations deny the helper access to their model files.
 - `lib/Folder.pm` centralizes the queue paths under `/tmp/talk` and creates the directories on demand.
 - `config/config.json` registers `d2 talk` and `d2 talk.read`; the reader collector is configured to poll every two seconds.
 

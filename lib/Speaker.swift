@@ -1,3 +1,4 @@
+import AppKit
 import AVFoundation
 import Foundation
 
@@ -17,6 +18,11 @@ let englishVoices = AVSpeechSynthesisVoice.speechVoices()
         if $0.quality.rawValue != $1.quality.rawValue {
             return $0.quality.rawValue > $1.quality.rawValue
         }
+        let firstIsSamantha = $0.identifier == "com.apple.voice.compact.en-US.Samantha"
+        let secondIsSamantha = $1.identifier == "com.apple.voice.compact.en-US.Samantha"
+        if firstIsSamantha != secondIsSamantha {
+            return firstIsSamantha
+        }
         if ($0.language == "en-US") != ($1.language == "en-US") {
             return $0.language == "en-US"
         }
@@ -28,12 +34,23 @@ guard let voice = englishVoices.first ?? AVSpeechSynthesisVoice(language: "en-US
     exit(1)
 }
 
-let utterance = AVSpeechUtterance(string: message)
-utterance.voice = voice
-utterance.rate = AVSpeechUtteranceDefaultSpeechRate * 0.92
+let voiceName = NSSpeechSynthesizer.VoiceName(rawValue: voice.identifier)
+guard let synthesizer = NSSpeechSynthesizer(voice: voiceName) else {
+    fputs("Cannot initialize macOS voice '\(voice.name)'.\n", stderr)
+    exit(1)
+}
 
-let synthesizer = AVSpeechSynthesizer()
-synthesizer.speak(utterance)
-while synthesizer.isSpeaking {
+guard synthesizer.startSpeaking(message) else {
+    fputs("Cannot start macOS voice '\(voice.name)'.\n", stderr)
+    exit(1)
+}
+
+let deadline = Date(timeIntervalSinceNow: max(30, Double(message.count) / 3))
+while synthesizer.isSpeaking && Date() < deadline {
     RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.1))
+}
+
+guard !synthesizer.isSpeaking else {
+    fputs("Speech timed out using voice '\(voice.name)'.\n", stderr)
+    exit(1)
 }

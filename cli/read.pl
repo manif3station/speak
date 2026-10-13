@@ -5,14 +5,15 @@ use warnings;
 use FindBin qw($RealBin);
 use Folder;
 
-if (grep { $_ eq '-h' || $_ eq '--help' } @ARGV) {
+if ( grep { $_ eq '-h' || $_ eq '--help' } @ARGV ) {
     print <<'USAGE';
 Usage:
   d2 talk.read [OPTIONS]
   perl -Ilib cli/read.pl [OPTIONS]
 
-Read queued messages, speak them using the best-quality available English
-macOS voice, and remove them from the queue after processing.
+Read queued messages, speak them using the best-quality English macOS voice
+available to a command-line process, and remove them from the queue after
+processing.
 
 Options:
   -h, --help  Show this help and exit
@@ -30,7 +31,7 @@ die "talk.read is supported on macOS only\n" if $^O ne 'darwin';
 
     foreach my $file ( readdir($dh) ) {
         next if !-f $file;
-        my ($from, $to) =  map { "$_/$file" } ('.', Folder->speaking);
+        my ( $from, $to ) = map { "$_/$file" } ( '.', Folder->speaking );
         rename $from, $to
           or die "Cannot move message '$file' to the speaking queue: $!";
     }
@@ -50,44 +51,60 @@ foreach my $file ( sort readdir($dh) ) {
     next if !-f $file;
     open my $fh, '<', $file
       or do {
-          warn "Cannot open message '$file': $!\n";
-          $failed = 1;
-          next;
+        warn "Cannot open message '$file': $!\n";
+        $failed = 1;
+        next;
       };
     local $/;
     my $message = <$fh> // '';
     close $fh
       or do {
-          warn "Cannot close message '$file': $!\n";
-          $failed = 1;
-          next;
-      };
-
-    my $status = system 'swift', "$RealBin/../lib/Speaker.swift", $message;
-    if ($status != 0) {
-        if ($status == -1) {
-            warn "Cannot start Swift speech helper: $!\n";
-        }
-        elsif ($status & 127) {
-            warn "Speech helper for '$file' stopped by signal " . ($status & 127) . "\n";
-        }
-        else {
-            warn "Speech helper for '$file' exited with status " . ($status >> 8) . "\n";
-        }
+        warn "Cannot close message '$file': $!\n";
         $failed = 1;
         next;
-    }
-
-    unlink $file
-      or do {
-          warn "Cannot remove spoken message '$file': $!\n";
-          $failed = 1;
       };
+
+    unlink $file;
+    print "> $message\n";
+    speak($message);
 }
 
 closedir($dh)
   or die "Cannot close the speaking queue: $!";
 exit 1 if $failed;
+
+sub speak {
+    my ($text) = @_;
+
+    my $width = 80;
+
+    for my $line ( split /\n/, $text, -1 ) {
+
+        # Preserve blank lines
+        if ( $line =~ /^\s*$/ ) {
+            print "\n";
+            next;
+        }
+
+        my @words = split /\s+/, $line;
+        my $out   = '';
+
+        for my $word (@words) {
+            if ( !$out ) {
+                $out = $word;
+            }
+            elsif ( length($out) + 1 + length($word) <= $width ) {
+                $out .= " $word";
+            }
+            else {
+                system say => $out;
+                $out = $word;
+            }
+        }
+
+        system say => $out;
+    }
+}
 
 __END__
 
@@ -106,8 +123,10 @@ d2 talk.read - speak queued messages
 
 Moves regular files from C</tmp/talk/new> into C</tmp/talk/speaking>, then
 processes files in filename order. A bundled Swift helper uses Apple's
-AVFoundation speech synthesizer and selects the highest-quality available
-English voice, preferring US English when quality is equal. Successfully spoken
+AVFoundation speech synthesizer and selects the highest-quality English voice
+available to a command-line process, preferring the Samantha voice when quality
+is equal. Siri natural voices are excluded because their model files are not
+accessible to this process on some macOS installations. Successfully spoken
 files are removed. Failed files remain in the speaking queue and are retried
 the next time the reader runs.
 

@@ -9,9 +9,10 @@ directory, and the reader speaks and consumes them.
 - Perl
 - The macOS Swift toolchain (provided by Xcode or Xcode Command Line Tools)
 
-The reader uses the highest-quality installed English macOS voice, preferring
-US English when voice quality is equal. For more natural speech, download a
-premium or enhanced English voice in macOS Accessibility settings.
+The reader uses the highest-quality English voice available to a command-line
+process, preferring US English when voice quality is equal and Samantha when
+quality is tied. macOS may list Siri natural voices that a command-line helper
+cannot access; those voices are excluded to avoid playback failures.
 
 ## Usage
 
