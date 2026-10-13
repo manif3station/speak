@@ -1,0 +1,2 @@
+# No Homebrew packages are needed.
+# Speech uses the Swift toolchain and AVFoundation provided by macOS.

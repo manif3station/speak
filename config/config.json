@@ -1,0 +1,16 @@
+{
+   "collectors" : [
+      {
+         "command" : "d2 talk.read",
+         "cwd" : "talk.data",
+         "indicator" : {
+            "icon" : "🔊"
+         },
+         "interval" : 2,
+         "name" : "ing",
+         "rotation" : {
+            "lines" : 10
+         }
+      }
+   ]
+}
