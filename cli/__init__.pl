@@ -24,7 +24,6 @@ Examples:
 USAGE
     exit 0;
 }
-die "talk is supported on macOS only\n" if $^O ne 'darwin';
 
 my $file = sprintf '%s.msg', time;
 my $from = sprintf '%s/%s', Folder->data, $file;

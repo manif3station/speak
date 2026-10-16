@@ -1,8 +1,9 @@
 {
    "collectors" : [
       {
-         "command" : "d2 talk.read",
-         "cwd" : "talk.data",
+         "command" : "d2 speak.read",
+         "timeout": 9999,
+         "cwd" : "home",
          "indicator" : {
             "icon" : "🔊"
          },

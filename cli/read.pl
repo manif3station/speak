@@ -5,6 +5,8 @@ use warnings;
 use FindBin qw($RealBin);
 use Folder;
 
+$| = 1;
+
 if ( grep { $_ eq '-h' || $_ eq '--help' } @ARGV ) {
     print <<'USAGE';
 Usage:
@@ -20,7 +22,6 @@ Options:
 USAGE
     exit 0;
 }
-die "talk.read is supported on macOS only\n" if $^O ne 'darwin';
 
 {
     chdir Folder->new_message
@@ -66,7 +67,12 @@ foreach my $file ( sort readdir($dh) ) {
 
     unlink $file;
     print "> $message\n";
-    speak($message);
+    my $say = $ENV{SAY_BIN} // 'say';
+    while (system $say => $message) {
+        sleep 1;
+        system $say => 'excuse me';
+        sleep 1;
+    }
 }
 
 closedir($dh)
